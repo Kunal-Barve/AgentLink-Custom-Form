@@ -1,0 +1,34 @@
+# Node modules
+
+node\_modules/
+
+# Environment variables file
+
+.env
+
+# Planning and task docs (not source code)
+
+PLANNING.md
+TASK.md
+
+# Logs
+
+npm-debug.log\*
+yarn-debug.log\*
+pnpm-debug.log\*
+
+# OS-specific files
+
+.DS\_Store
+Thumbs.db
+
+# IDE/editor configs
+
+.vscode/
+.idea/
+.trae/
+# Build output folders
+
+dist/
+build/
+coverage/
