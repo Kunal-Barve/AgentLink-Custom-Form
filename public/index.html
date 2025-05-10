@@ -4,12 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agent Link Form - Prototype</title>
-    <!-- Tailwind CSS via CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Choose ONE of these approaches for Tailwind CSS -->
+    <!-- Option 1: Production approach (recommended) -->
+    <link rel="stylesheet" href="css/main.css">
+    
+    <!-- Option 2: Development only (Play CDN) -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script> -->
+    
+    <!-- Main JS - Load before Alpine initializes -->
+    <script src="js/main.js"></script>
+    
     <!-- Alpine.js via CDN -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <!-- Main JS -->
-    <script src="js/main.js" defer></script>
+    
+    <!-- Load configuration -->
+    <script src="js/config.js"></script>
+    
+    <!-- Load Google Maps API with dynamic API key -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Create script element
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${window.appConfig.googleMapsApiKey}&libraries=places&callback=initAutocomplete`;
+            script.async = true;
+            script.defer = true;
+            
+            // Append to document
+            document.head.appendChild(script);
+        });
+    </script>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-md bg-white rounded-lg shadow-md p-6" x-data="formHandler()">
@@ -37,6 +61,7 @@
                     id="street_number" 
                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     readonly
+                    :value="addressComponents ? addressComponents.street_number : ''"
                 >
             </div>
             <div>
@@ -46,6 +71,7 @@
                     id="route" 
                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     readonly
+                    :value="addressComponents ? addressComponents.route : ''"
                 >
             </div>
         </div>
@@ -58,6 +84,7 @@
                     id="locality" 
                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     readonly
+                    :value="addressComponents ? addressComponents.locality : ''"
                 >
             </div>
             <div>
@@ -67,6 +94,7 @@
                     id="administrative_area_level_1" 
                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     readonly
+                    :value="addressComponents ? addressComponents.administrative_area_level_1 : ''"
                 >
             </div>
         </div>
@@ -79,6 +107,7 @@
                     id="postal_code" 
                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     readonly
+                    :value="addressComponents ? addressComponents.postal_code : ''"
                 >
             </div>
             <div>
@@ -88,8 +117,19 @@
                     id="country" 
                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     readonly
+                    :value="addressComponents ? addressComponents.country : ''"
                 >
             </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="mt-6">
+            <button 
+                @click="submitAddress" 
+                class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+                Continue
+            </button>
         </div>
 
         <!-- Error Messages -->
@@ -97,97 +137,5 @@
             <p x-text="errorMessage"></p>
         </div>
     </div>
-
-    <!-- Google Places API with direct initialization -->
-    <script>
-        function initAutocomplete() {
-            // Get the input element
-            const autocompleteInput = document.getElementById('autocomplete');
-            
-            // Create the autocomplete object, restricting the search predictions to
-            // addresses in Australia
-            const autocomplete = new google.maps.places.Autocomplete(autocompleteInput, {
-                componentRestrictions: { country: ["au"] },
-                fields: ["address_components", "formatted_address", "geometry"],
-                types: ["address"],
-            });
-            
-            // Focus the input
-            autocompleteInput.focus();
-            
-            // When the user selects an address from the drop-down, populate the
-            // address fields in the form.
-            autocomplete.addListener("place_changed", function() {
-                const place = autocomplete.getPlace();
-                
-                if (!place.geometry) {
-                    // User entered the name of a Place that was not suggested and
-                    // pressed the Enter key, or the Place Details request failed.
-                    console.error("No details available for input: '" + autocompleteInput.value + "'");
-                    return;
-                }
-                
-                // Clear all fields first
-                document.getElementById('street_number').value = '';
-                document.getElementById('route').value = '';
-                document.getElementById('locality').value = '';
-                document.getElementById('administrative_area_level_1').value = '';
-                document.getElementById('postal_code').value = '';
-                document.getElementById('country').value = '';
-                
-                // Get each component of the address from the place details,
-                // and fill in the corresponding field on the form.
-                for (const component of place.address_components) {
-                    const componentType = component.types[0];
-                    
-                    switch (componentType) {
-                        case "street_number": {
-                            document.getElementById('street_number').value = component.long_name;
-                            break;
-                        }
-                        
-                        case "route": {
-                            document.getElementById('route').value = component.long_name;
-                            break;
-                        }
-                        
-                        case "locality": {
-                            document.getElementById('locality').value = component.long_name;
-                            break;
-                        }
-                        
-                        case "administrative_area_level_1": {
-                            document.getElementById('administrative_area_level_1').value = component.short_name;
-                            break;
-                        }
-                        
-                        case "postal_code": {
-                            document.getElementById('postal_code').value = component.long_name;
-                            break;
-                        }
-                        
-                        case "country": {
-                            document.getElementById('country').value = component.long_name;
-                            break;
-                        }
-                    }
-                }
-                
-                // Update Alpine.js data if needed
-                const alpine = document.querySelector('[x-data]').__x.$data;
-                
-                // Set address data in Alpine.js
-                alpine.addressData = {
-                    formatted_address: place.formatted_address,
-                    lat: place.geometry.location.lat(),
-                    lng: place.geometry.location.lng()
-                };
-                
-                alpine.addressSelected = true;
-                alpine.errorMessage = '';
-            });
-        }
-    </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDAe78oRpFzdmWyjMOzVDAZY4HaM_eK2ng&libraries=places&callback=initAutocomplete"></script>
 </body>
 </html>
