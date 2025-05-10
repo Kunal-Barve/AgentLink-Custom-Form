@@ -1,0 +1,9 @@
+// Configuration for the application
+window.appConfig = {
+    // For development, hardcode the API key here
+    // For production, this will be replaced during the build process
+    googleMapsApiKey: 'YOUR_GOOGLE_API_KEY'
+};
+
+// Log that config is loaded
+console.log('Configuration loaded');
