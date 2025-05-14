@@ -37,31 +37,451 @@
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-md bg-white rounded-lg shadow-md p-6" x-data="formHandler()">
-        <h1 class="text-2xl font-bold text-center mb-6">Property Address</h1>
-        
-        <!-- Main Address Field -->
-        <div class="mb-4">
-            <label for="autocomplete" class="block text-sm font-medium text-gray-700 mb-1">Address <span class="text-red-500">*</span></label>
-            <div class="relative">
-                <input 
-                    type="text" 
-                    id="autocomplete" 
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter your address here"
-                >
+        <!-- Progress Bar -->
+        <div class="mb-6">
+            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div class="bg-blue-600 h-2.5 rounded-full" :style="`width: ${formProgress}%`"></div>
+            </div>
+            <p class="text-sm text-gray-600 mt-2 text-right" x-text="`Step ${currentStep} of ${totalSteps}`"></p>
+        </div>
+
+        <!-- Step 1: Agent Type -->
+        <div x-show="currentStep === 1">
+            <h1 class="text-2xl font-bold text-center mb-6">Agent Type</h1>
+            <div class="space-y-4">
+                <p class="text-gray-700">Are you looking to sell or lease your property?</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <button 
+                        @click="formData.agentType = 'selling'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.agentType === 'selling'}"
+                    >
+                        <span class="block text-lg font-medium">Selling</span>
+                        <span class="text-sm text-gray-500">I want to sell my property</span>
+                    </button>
+                    <button 
+                        @click="formData.agentType = 'leasing'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.agentType === 'leasing'}"
+                    >
+                        <span class="block text-lg font-medium">Leasing</span>
+                        <span class="text-sm text-gray-500">I want to lease my property</span>
+                    </button>
+                </div>
             </div>
         </div>
 
-        <!-- Address Components - JotForm Style -->
-        <div class="grid grid-cols-2 gap-4 mb-4">
-            <div>
-                <label for="street_number" class="block text-sm font-medium text-gray-700 mb-1">House number</label>
-                <input 
-                    type="text" 
-                    id="street_number" 
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    readonly
-                    :value="addressComponents ? addressComponents.street_number : ''"
+        <!-- Step 2: Property Type -->
+        <div x-show="currentStep === 2">
+            <h1 class="text-2xl font-bold text-center mb-6">Property Type</h1>
+            <div class="space-y-4">
+                <p class="text-gray-700">What type of property do you have?</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <button 
+                        @click="formData.propertyType = 'house'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.propertyType === 'house'}"
+                    >
+                        <span class="block text-lg font-medium">House</span>
+                    </button>
+                    <button 
+                        @click="formData.propertyType = 'unit'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.propertyType === 'unit'}"
+                    >
+                        <span class="block text-lg font-medium">Unit</span>
+                    </button>
+                    <button 
+                        @click="formData.propertyType = 'townhouse'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.propertyType === 'townhouse'}"
+                    >
+                        <span class="block text-lg font-medium">Townhouse</span>
+                    </button>
+                    <button 
+                        @click="formData.propertyType = 'land'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.propertyType === 'land'}"
+                    >
+                        <span class="block text-lg font-medium">Land</span>
+                    </button>
+                    <button 
+                        @click="formData.propertyType = 'villa'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.propertyType === 'villa'}"
+                    >
+                        <span class="block text-lg font-medium">Villa</span>
+                    </button>
+                    <button 
+                        @click="formData.propertyType = 'commercial'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.propertyType === 'commercial'}"
+                    >
+                        <span class="block text-lg font-medium">Commercial</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Total Area -->
+        <div x-show="currentStep === 3">
+            <h1 class="text-2xl font-bold text-center mb-6">Total Area</h1>
+            <div class="space-y-4">
+                <p class="text-gray-700">What is the total area of your property?</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <button 
+                        @click="formData.totalArea = '<100'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.totalArea === '<100'}"
+                    >
+                        <span class="block text-lg font-medium">Less than 100m²</span>
+                    </button>
+                    <button 
+                        @click="formData.totalArea = '100-200'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.totalArea === '100-200'}"
+                    >
+                        <span class="block text-lg font-medium">100-200m²</span>
+                    </button>
+                    <button 
+                        @click="formData.totalArea = '200-400'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.totalArea === '200-400'}"
+                    >
+                        <span class="block text-lg font-medium">200-400m²</span>
+                    </button>
+                    <button 
+                        @click="formData.totalArea = '400-1000'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.totalArea === '400-1000'}"
+                    >
+                        <span class="block text-lg font-medium">400-1000m²</span>
+                    </button>
+                    <button 
+                        @click="formData.totalArea = '1000+'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.totalArea === '1000+'}"
+                    >
+                        <span class="block text-lg font-medium">1000m²+</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Bedrooms -->
+        <div x-show="currentStep === 4">
+            <h1 class="text-2xl font-bold text-center mb-6">Bedrooms</h1>
+            <div class="space-y-4">
+                <p class="text-gray-700">How many bedrooms does your property have?</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <button 
+                        @click="formData.bedrooms = '<=1'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.bedrooms === '<=1'}"
+                    >
+                        <span class="block text-lg font-medium">1 or less</span>
+                    </button>
+                    <button 
+                        @click="formData.bedrooms = '2'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.bedrooms === '2'}"
+                    >
+                        <span class="block text-lg font-medium">2</span>
+                    </button>
+                    <button 
+                        @click="formData.bedrooms = '3'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.bedrooms === '3'}"
+                    >
+                        <span class="block text-lg font-medium">3</span>
+                    </button>
+                    <button 
+                        @click="formData.bedrooms = '4+'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.bedrooms === '4+'}"
+                    >
+                        <span class="block text-lg font-medium">4 or more</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 5: Lease Duration (Conditional) -->
+        <div x-show="currentStep === 5 && formData.agentType === 'leasing'">
+            <h1 class="text-2xl font-bold text-center mb-6">Lease Duration</h1>
+            <div class="space-y-4">
+                <p class="text-gray-700">What is your preferred lease duration?</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <button 
+                        @click="formData.leaseDuration = '6 months'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.leaseDuration === '6 months'}"
+                    >
+                        <span class="block text-lg font-medium">6 months</span>
+                    </button>
+                    <button 
+                        @click="formData.leaseDuration = '12 months'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.leaseDuration === '12 months'}"
+                    >
+                        <span class="block text-lg font-medium">12 months</span>
+                    </button>
+                    <button 
+                        @click="formData.leaseDuration = '18 months'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.leaseDuration === '18 months'}"
+                    >
+                        <span class="block text-lg font-medium">18 months</span>
+                    </button>
+                    <button 
+                        @click="formData.leaseDuration = '24+ months'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.leaseDuration === '24+ months'}"
+                    >
+                        <span class="block text-lg font-medium">24+ months</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 5: Intent to Sell (Conditional) -->
+        <div x-show="currentStep === 5 && formData.agentType === 'selling'">
+            <h1 class="text-2xl font-bold text-center mb-6">Intent to Sell</h1>
+            <div class="space-y-4">
+                <p class="text-gray-700">When are you looking to sell your property?</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <button 
+                        @click="formData.intentToSell = 'ASAP'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.intentToSell === 'ASAP'}"
+                    >
+                        <span class="block text-lg font-medium">ASAP</span>
+                    </button>
+                    <button 
+                        @click="formData.intentToSell = '1-3 months'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.intentToSell === '1-3 months'}"
+                    >
+                        <span class="block text-lg font-medium">1-3 months</span>
+                    </button>
+                    <button 
+                        @click="formData.intentToSell = '3-6 months'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.intentToSell === '3-6 months'}"
+                    >
+                        <span class="block text-lg font-medium">3-6 months</span>
+                    </button>
+                    <button 
+                        @click="formData.intentToSell = '6+ months'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.intentToSell === '6+ months'}"
+                    >
+                        <span class="block text-lg font-medium">6+ months</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 6: Estimated Rental (Residential) -->
+        <div x-show="currentStep === 6 && formData.agentType === 'leasing' && isResidentialProperty()">
+            <h1 class="text-2xl font-bold text-center mb-6">Estimated Rental</h1>
+            <div class="space-y-4">
+                <p class="text-gray-700">What is your estimated weekly rental?</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <button 
+                        @click="formData.estimatedRentalResidential = '<$500pw'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.estimatedRentalResidential === '<$500pw'}"
+                    >
+                        <span class="block text-lg font-medium">Less than $500pw</span>
+                    </button>
+                    <button 
+                        @click="formData.estimatedRentalResidential = '$500pw-$1000pw'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.estimatedRentalResidential === '$500pw-$1000pw'}"
+                    >
+                        <span class="block text-lg font-medium">$500pw - $1000pw</span>
+                    </button>
+                    <button 
+                        @click="formData.estimatedRentalResidential = '$1000pw-$1500pw'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.estimatedRentalResidential === '$1000pw-$1500pw'}"
+                    >
+                        <span class="block text-lg font-medium">$1000pw - $1500pw</span>
+                    </button>
+                    <button 
+                        @click="formData.estimatedRentalResidential = '$1500pw-$2000pw'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.estimatedRentalResidential === '$1500pw-$2000pw'}"
+                    >
+                        <span class="block text-lg font-medium">$1500pw - $2000pw</span>
+                    </button>
+                    <button 
+                        @click="formData.estimatedRentalResidential = '$2000+pw'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.estimatedRentalResidential === '$2000+pw'}"
+                    >
+                        <span class="block text-lg font-medium">$2000+pw</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 6: Estimated Rental (Commercial/Land) -->
+        <div x-show="currentStep === 6 && formData.agentType === 'leasing' && !isResidentialProperty()">
+            <h1 class="text-2xl font-bold text-center mb-6">Estimated Rental</h1>
+            <div class="space-y-4">
+                <p class="text-gray-700">What is your estimated annual rental?</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <button 
+                        @click="formData.estimatedRentalCommercial = '<$10kpa'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.estimatedRentalCommercial === '<$10kpa'}"
+                    >
+                        <span class="block text-lg font-medium">Less than $10,000pa</span>
+                    </button>
+                    <button 
+                        @click="formData.estimatedRentalCommercial = '$10k-$25kpa'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.estimatedRentalCommercial === '$10k-$25kpa'}"
+                    >
+                        <span class="block text-lg font-medium">$10,000pa - $25,000pa</span>
+                    </button>
+                    <button 
+                        @click="formData.estimatedRentalCommercial = '$25k-$50kpa'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.estimatedRentalCommercial === '$25k-$50kpa'}"
+                    >
+                        <span class="block text-lg font-medium">$25,000pa - $50,000pa</span>
+                    </button>
+                    <button 
+                        @click="formData.estimatedRentalCommercial = '$50k-$100kpa'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.estimatedRentalCommercial === '$50k-$100kpa'}"
+                    >
+                        <span class="block text-lg font-medium">$50,000pa - $100,000pa</span>
+                    </button>
+                    <button 
+                        @click="formData.estimatedRentalCommercial = '$100k-$500kpa'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.estimatedRentalCommercial === '$100k-$500kpa'}"
+                    >
+                        <span class="block text-lg font-medium">$100,000pa - $500,000pa</span>
+                    </button>
+                    <button 
+                        @click="formData.estimatedRentalCommercial = '$500k+pa'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.estimatedRentalCommercial === '$500k+pa'}"
+                    >
+                        <span class="block text-lg font-medium">$500,000+pa</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 6: Estimated Sale Value (Conditional) -->
+        <div x-show="currentStep === 6 && formData.agentType === 'selling'">
+            <h1 class="text-2xl font-bold text-center mb-6">Estimated Sale Value</h1>
+            <div class="space-y-4">
+                <p class="text-gray-700">What is your estimated sale value?</p>
+                <div class="relative">
+                    <select 
+                        x-model="formData.estimatedSaleValue"
+                        @change="formData.estimatedSaleValue && nextStep()"
+                        class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+                    >
+                        <option value="" disabled selected>Please Select</option>
+                        <option value="<$500k">Less than $500k</option>
+                        <option value="$500k-$1m">$500k-$1m</option>
+                        <option value="$1m-$1.5m">$1m-$1.5m</option>
+                        <option value="$1.5m-$2m">$1.5m-$2m</option>
+                        <option value="$2m-$2.5m">$2m-$2.5m</option>
+                        <option value="$2.5m-$3m">$2.5m-$3m</option>
+                        <option value="$3m-$3.5m">$3m-$3.5m</option>
+                        <option value="$3.5m-$4m">$3.5m-$4m</option>
+                        <option value="$4m-$6m">$4m-$6m</option>
+                        <option value="$6m-$8m">$6m-$8m</option>
+                        <option value="$8m-$10m">$8m-$10m</option>
+                        <option value="$10m+">$10m+</option>
+                    </select>
+                    
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 7: Agent Contacted -->
+        <div x-show="currentStep === 7">
+            <h1 class="text-2xl font-bold text-center mb-6">Agent Contact</h1>
+            <div class="space-y-4">
+                <p class="text-gray-700">Have you already contacted an agent?</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <button 
+                        @click="formData.agentContacted = 'yes'; nextStep()" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.agentContacted === 'yes'}"
+                    >
+                        <span class="block text-lg font-medium">Yes</span>
+                    </button>
+                    <button 
+                        @click="formData.agentContacted = 'no'; formData.agentName = ''; currentStep = 9;" 
+                        class="p-4 border rounded-md text-center hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        :class="{'bg-blue-100 border-blue-500': formData.agentContacted === 'no'}"
+                    >
+                        <span class="block text-lg font-medium">No</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 8: Agent Name (Conditional) -->
+        <div x-show="currentStep === 8 && formData.agentContacted === 'yes'">
+            <h1 class="text-2xl font-bold text-center mb-6">Agent Name</h1>
+            <div class="space-y-4">
+                <p class="text-gray-700">What is the name of the agent you've contacted?</p>
+                <div class="mb-4">
+                    <input 
+                        type="text" 
+                        x-model="formData.agentName"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter agent name"
+                    >
+                </div>
+                <button 
+                    @click="nextStep()" 
+                    class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                    Continue
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 9: Property Address (Keep existing functionality) -->
+        <div x-show="currentStep === 9">
+            <h1 class="text-2xl font-bold text-center mb-6">Property Address</h1>
+            
+            <!-- Main Address Field -->
+            <div class="mb-4">
+                <label for="autocomplete" class="block text-sm font-medium text-gray-700 mb-1">Address <span class="text-red-500">*</span></label>
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        id="autocomplete" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter your address here"
+                    >
+                </div>
+            </div>
+
+            <!-- Address Components - JotForm Style -->
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label for="street_number" class="block text-sm font-medium text-gray-700 mb-1">House number</label>
+                    <input 
+                        type="text" 
+                        id="street_number" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        readonly
+                        :value="addressComponents ? addressComponents.street_number : ''"
                 >
             </div>
             <div>
@@ -121,16 +541,83 @@
                 >
             </div>
         </div>
+        </div>
 
-        <!-- Submit Button -->
-        <div class="mt-6">
+        <!-- Step 10: Contact Information (Name, Mobile, Email) -->
+        <div x-show="currentStep === 10">
+            <h1 class="text-2xl font-bold text-center mb-6">Contact Information</h1>
+            
+            <div class="space-y-4">
+                <!-- Name Field -->
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name <span class="text-red-500">*</span></label>
+                    <input 
+                        type="text" 
+                        id="name" 
+                        x-model="formData.name"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter your full name"
+                    >
+                </div>
+                
+                <!-- Mobile Number Field -->
+                <div>
+                    <label for="mobileNumber" class="block text-sm font-medium text-gray-700 mb-1">Mobile Number <span class="text-red-500">*</span></label>
+                    <input 
+                        type="tel" 
+                        id="mobileNumber" 
+                        x-model="formData.mobileNumber"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter your mobile number"
+                    >
+                </div>
+                
+                <!-- Email Field -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email <span class="text-red-500">*</span></label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        x-model="formData.email"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter your email address"
+                    >
+                </div>
+            </div>
+            
+            <!-- Submit Button -->
+            <div class="mt-6">
+                <button 
+                    @click="submitForm" 
+                    class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                >
+                    Submit
+                </button>
+            </div>
+            </div>
+            
+        <!-- Navigation Buttons (for all steps except the last) -->
+        <div class="mt-6 flex justify-between" x-show="currentStep < 10">
             <button 
-                @click="submitAddress" 
-                class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                x-show="currentStep > 1" 
+                @click="previousStep()" 
+                class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
             >
-                Continue
+                Previous
+            </button>
+            
+            <div class="flex-grow"></div>
+            
+            <button 
+                @click="nextStep()" 
+                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+                Next
             </button>
         </div>
+
+
+
 
         <!-- Error Messages -->
         <div x-show="errorMessage" class="mt-4 p-3 bg-red-100 text-red-700 rounded-md">
