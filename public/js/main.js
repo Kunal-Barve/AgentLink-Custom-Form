@@ -66,6 +66,55 @@ function formHandler() {
         nextStep() {
             // Validate current step before proceeding
             if (this.validateCurrentStep()) {
+                // Special handling for step 9 - send data to webhook before moving to step 10
+                if (this.currentStep === 9) {
+                    // Validate that we have address components
+                    if (!this.addressComponents || !this.formData.address) {
+                        this.errorMessage = 'Please enter and select a valid address';
+                        return;
+                    }
+                    
+                    // Check for required address components
+                    if (!this.addressComponents.street_number || !this.addressComponents.route) {
+                        this.errorMessage = 'Please select an address with a valid street number and name';
+                        return;
+                    }
+                    
+                    console.log('Address submission:', this.formData.address);
+                    
+                    // First submission - collect data up to this point
+                    const firstSubmissionData = {
+                        agentType: this.formData.agentType,
+                        propertyType: this.formData.propertyType,
+                        totalArea: this.formData.totalArea,
+                        bedrooms: this.formData.bedrooms,
+                        // Include conditional fields based on agent type
+                        ...(this.formData.agentType === 'leasing' ? { leaseDuration: this.formData.leaseDuration } : {}),
+                        ...(this.formData.agentType === 'selling' ? { intentToSell: this.formData.intentToSell } : {}),
+                        // Include conditional rental/sale estimates
+                        ...(this.formData.agentType === 'leasing' && this.isResidentialProperty() ? 
+                            { estimatedRentalResidential: this.formData.estimatedRentalResidential } : {}),
+                        ...(this.formData.agentType === 'leasing' && !this.isResidentialProperty() ? 
+                            { estimatedRentalCommercial: this.formData.estimatedRentalCommercial } : {}),
+                        ...(this.formData.agentType === 'selling' ? 
+                            { estimatedSaleValue: this.formData.estimatedSaleValue } : {}),
+                        agentContacted: this.formData.agentContacted,
+                        ...(this.formData.agentContacted === 'yes' ? { agentName: this.formData.agentName } : {}),
+                        // Address data
+                        address: this.formData.address
+                    };
+                    
+                    console.log('First part submission data:', firstSubmissionData);
+                    
+                    // Send data to webhook
+                    this.sendDataToWebhook(firstSubmissionData, "incomplete");
+                    
+                    // Move to step 10
+                    this.currentStep = 10;
+                    this.errorMessage = '';
+                    return;
+                }
+                
                 // Handle conditional navigation based on form data
                 if (this.currentStep === 5) {
                     // After step 5, route based on agent type and property type
@@ -227,53 +276,13 @@ function formHandler() {
             console.log('Extracted address components:', this.addressComponents);
         },
         
-        // First submission - after address step
+        // First submission - after address step (now simplified since webhook logic moved to nextStep)
         submitAddress() {
-            // Validate that we have address components
-            if (!this.addressComponents || !this.formData.address) {
-                this.errorMessage = 'Please enter and select a valid address';
-                return;
-            }
-            
-            // Check for required address components
-            if (!this.addressComponents.street_number || !this.addressComponents.route) {
-                this.errorMessage = 'Please select an address with a valid street number and name';
-                return;
-            }
-            
-            console.log('Address submission:', this.formData.address);
-            
-            // Here you would typically make an API call to save the first part of the form
-            // For now, we'll just simulate a successful submission
-            
-            // First submission - collect data up to this point
-            const firstSubmissionData = {
-                agentType: this.formData.agentType,
-                propertyType: this.formData.propertyType,
-                totalArea: this.formData.totalArea,
-                bedrooms: this.formData.bedrooms,
-                // Include conditional fields based on agent type
-                ...(this.formData.agentType === 'leasing' ? { leaseDuration: this.formData.leaseDuration } : {}),
-                ...(this.formData.agentType === 'selling' ? { intentToSell: this.formData.intentToSell } : {}),
-                // Include conditional rental/sale estimates
-                ...(this.formData.agentType === 'leasing' && this.isResidentialProperty() ? 
-                    { estimatedRentalResidential: this.formData.estimatedRentalResidential } : {}),
-                ...(this.formData.agentType === 'leasing' && !this.isResidentialProperty() ? 
-                    { estimatedRentalCommercial: this.formData.estimatedRentalCommercial } : {}),
-                ...(this.formData.agentType === 'selling' ? 
-                    { estimatedSaleValue: this.formData.estimatedSaleValue } : {}),
-                agentContacted: this.formData.agentContacted,
-                ...(this.formData.agentContacted === 'yes' ? { agentName: this.formData.agentName } : {}),
-                // Address data
-                address: this.formData.address,
-                addressComponents: this.addressComponents
-            };
-            
-            console.log('First part submission data:', firstSubmissionData);
+            // This function is no longer needed for webhook submission
+            // It can be kept empty or removed if not used elsewhere
             
             // Move to the next step (contact information)
-            this.currentStep = 10;
-            this.errorMessage = '';
+            this.nextStep();
         },
         
         // Final form submission
@@ -301,13 +310,10 @@ function formHandler() {
                 return;
             }
             
-            // Prepare the complete form data for submission
-            const completeFormData = {
-                ...this.formData,
-                addressComponents: this.addressComponents
-            };
+            console.log('Final form submission with contact info:', this.formData);
             
-            console.log('Form submission:', completeFormData);
+            // Send data to webhook
+            this.sendDataToWebhook(this.formData, "completed");
             
             // Here you would typically make an API call to submit the form
             // For now, we'll just simulate a successful submission
@@ -315,6 +321,98 @@ function formHandler() {
             
             // Reset the form after successful submission
             this.resetForm();
+        },
+        
+        // Send data to webhook
+        sendDataToWebhook(data, status) {
+            console.log(`Preparing to send ${status} data to webhook`);
+            
+            // Format data for webhook
+            const webhookData = {};
+            
+            // Format agent type
+            webhookData["1. Agent Type"] = data.agentType;
+            
+            // Format property type
+            webhookData["2. Property Type"] = data.propertyType;
+            
+            // Format total area
+            webhookData["3. Total Area"] = data.totalArea;
+            
+            // Format bedrooms
+            webhookData["4. Bedrooms"] = data.bedrooms;
+            
+            // Format conditional fields based on agent type
+            if (data.agentType === 'leasing') {
+                webhookData["5. Lease Duration"] = data.leaseDuration;
+            } else if (data.agentType === 'selling') {
+                webhookData["5. Intent to Sell"] = data.intentToSell;
+            }
+            
+            // Format rental/sale estimates
+            if (data.agentType === 'leasing') {
+                if (this.isResidentialProperty()) {
+                    webhookData["6. Estimated Rental (Residential)"] = data.estimatedRentalResidential;
+                } else {
+                    webhookData["6. Estimated Rental (Commercial/Land)"] = data.estimatedRentalCommercial;
+                }
+            } else if (data.agentType === 'selling') {
+                webhookData["6. Estimated Sale Value"] = data.estimatedSaleValue;
+            }
+            
+            // Format agent contacted
+            webhookData["7. Agent Contacted"] = data.agentContacted;
+            
+            // Format agent name if applicable
+            if (data.agentContacted === 'yes') {
+                webhookData["8. Agent Name"] = data.agentName;
+            }
+            
+            // Format address
+            webhookData["9. Address"] = data.address;
+            
+            // Format contact information if available
+            if (data.name) {
+                webhookData["10. Name"] = data.name;
+            }
+            
+            if (data.mobileNumber) {
+                webhookData["10. Mobile Number"] = data.mobileNumber;
+            }
+            
+            if (data.email) {
+                webhookData["10. Email"] = data.email;
+            }
+            
+            // Add form status
+            webhookData.current_form_status = status;
+            
+            console.log('Webhook data:', webhookData);
+            
+            // Send data to webhook
+            const webhookUrl = 'https://hook.eu2.make.com/ye27bpayyekgblw55n9ihnakrolho0ny';
+            
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(webhookData),
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log(`Data sent to webhook successfully (status: ${status})`);
+                } else {
+                    console.error(`Failed to send data to webhook (status: ${status}):`, response.status, response.statusText);
+                }
+                return response.text();
+            })
+            .then(responseData => {
+                console.log('Webhook response:', responseData);
+            })
+            .catch(error => {
+                console.error(`Error sending data to webhook (status: ${status}):`, error);
+            });
         },
         
         // Reset the form to initial state

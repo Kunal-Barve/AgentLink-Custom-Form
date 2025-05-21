@@ -36,3 +36,4 @@ coverage/
 
 # Config files
 config.js
+deploy.sh

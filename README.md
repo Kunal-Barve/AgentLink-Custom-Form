@@ -1,127 +1,121 @@
+# Custom Form Docker Deployment
 
+This repository contains a custom form application built with Alpine.js and Express, ready to be deployed using Docker.
 
+## Deployment to Hetzner Cloud VPS
 
-          
-# Google Maps Autocomplete Integration Documentation
+### Prerequisites
 
-This document outlines the implementation and configuration of Google Maps Autocomplete in our custom form application.
+- SSH access to your Hetzner Cloud VPS
+- Docker and Docker Compose installed on your VPS
+- A domain or subdomain pointing to your VPS (optional)
 
-## Table of Contents
-1. [Overview](#overview)
-2. [Implementation Details](#implementation-details)
-3. [API Key Management](#api-key-management)
-4. [Troubleshooting](#troubleshooting)
-5. [Future Improvements](#future-improvements)
+### Deployment Steps
 
-## Overview
+1. **Clone the repository to your local machine**
 
-We've implemented Google Maps Places Autocomplete to provide address search and auto-fill functionality in our form. The implementation uses Alpine.js for state management and Google Maps JavaScript API for address lookup.
-
-## Implementation Details
-
-### Key Components
-
-1. **Alpine.js Component**
-   - Manages form state and address data
-   - Handles address component extraction and field population
-   - Provides validation and error handling
-
-2. **Google Maps Integration**
-   - Initializes the Places Autocomplete widget
-   - Restricts searches to Australian addresses
-   - Communicates with Alpine.js via a global handler function
-
-### Code Structure
-
-- **Main Alpine.js Component**: Defined in `main.js` as `formHandler()`
-- **Google Maps Initialization**: Implemented in `window.initAutocomplete()`
-- **Configuration**: API key stored in `config.js`
-
-### Communication Flow
-
-1. User selects an address from the autocomplete dropdown
-2. Google Maps API triggers the `place_changed` event
-3. The event handler calls `window.handlePlaceSelect(place)`
-4. Alpine.js processes the address components and updates the form fields
-
-## API Key Management
-
-We've implemented a two-environment approach for API key management:
-
-### Development Environment
-- API key is stored directly in `config.js`
-- Simple setup for local development
-
-```javascript
-// config.js (development)
-window.appConfig = {
-    googleMapsApiKey: 'YOUR_DEVELOPMENT_API_KEY'
-};
+```bash
+git clone <repository-url>
+cd custom-form
 ```
 
-### Production Environment
-- API key is replaced during the build process
-- Prevents exposing the production API key in source control
+2. **Copy the files to your Hetzner Cloud VPS**
 
-```javascript
-// build.js
-const fs = require('fs');
-const path = require('path');
-
-// Load API key from environment or .env file
-const apiKey = process.env.GOOGLE_MAPS_API_KEY || 'YOUR_PRODUCTION_API_KEY';
-
-// Path to config.js
-const configPath = path.join(__dirname, 'public', 'js', 'config.js');
-
-// Read the config file
-let configContent = fs.readFileSync(configPath, 'utf8');
-
-// Replace the API key
-configContent = configContent.replace('YOUR_DEVELOPMENT_API_KEY', apiKey);
-
-// Write the updated config
-fs.writeFileSync(configPath, configContent);
-
-console.log('Config file updated with production API key');
+```bash
+# Using SCP to copy files (replace with your server details)
+scp -r ./* user@your-hetzner-ip:/path/to/custom-form/
 ```
 
-## Troubleshooting
+3. **Set up environment variables on your VPS**
 
-### Common Issues
+```bash
+# SSH into your server
+ssh user@your-hetzner-ip
 
-1. **Alpine.js Initialization Timing**
-   - **Problem**: Alpine.js component not initialized when Google Maps tries to access it
-   - **Solution**: Use a global handler function created during Alpine's initialization
+# Navigate to the project directory
+cd /path/to/custom-form/
 
-2. **Address Component Extraction**
-   - **Problem**: Some address components not being extracted correctly
-   - **Solution**: Check all types for each component, not just the first one
+# Create .env file from the template
+cp .env.production .env
 
-3. **API Key Configuration**
-   - **Problem**: `process.env` not available in browser environment
-   - **Solution**: Use a separate config file with environment-specific builds
+# Edit the .env file with your actual credentials
+nano .env
+```
 
-## Future Improvements
+4. **Build and start the Docker containers**
 
-1. **Form Validation**
-   - Add validation for required fields
-   - Improve error handling and user feedback
+```bash
+# Build and start the containers in detached mode
+docker-compose up -d
+```
 
-2. **User Experience**
-   - Add loading indicators during address lookup
-   - Improve accessibility for all users
+5. **Access your form**
 
-3. **Security**
-   - Implement more robust API key protection
-   - Consider server-side proxy for API requests
+Your form will be accessible at:
+- Direct access to the Node.js application: http://your-hetzner-ip:3001
+- Through Nginx: http://your-hetzner-ip:8080
 
-4. **Testing**
-   - Add automated tests for address component extraction
-   - Test across different browsers and devices
+### SSL Configuration (Optional)
 
----
+To add SSL with Let's Encrypt:
 
-*Last updated: [Current Date]*
+1. **Install Certbot on your VPS**
 
-        Too many current requests. Your queue position is 1. Please wait for a while or switch to other models for a smoother experience.
+```bash
+apt update
+apt install certbot python3-certbot-nginx
+```
+
+2. **Obtain SSL certificate**
+
+```bash
+certbot --nginx -d your-domain.com
+```
+
+3. **Update nginx.conf to include SSL configuration**
+
+Edit the nginx.conf file to include the SSL configuration provided by Certbot.
+
+### Maintenance
+
+- **View logs**
+
+```bash
+# View logs for the form application
+docker-compose logs custom-form
+
+# View logs for Nginx
+docker-compose logs form-nginx
+```
+
+- **Restart containers**
+
+```bash
+docker-compose restart
+```
+
+- **Update the application**
+
+```bash
+# Pull latest changes
+git pull
+
+# Rebuild and restart containers
+docker-compose down
+docker-compose up -d --build
+```
+
+## Environment Variables
+
+The application requires the following environment variables:
+
+- `TWILIO_ACCOUNT_SID`: Your Twilio account SID
+- `TWILIO_AUTH_TOKEN`: Your Twilio auth token
+- `TWILIO_VERIFY_SID`: Your Twilio verify service SID
+- `PORT`: The port the application will run on (default: 3001)
+- `GOOGLE_MAPS_API_KEY`: Your Google Maps API key
+
+## Docker Compose Services
+
+- **custom-form**: The Node.js application running the form
+- **form-nginx**: Nginx reverse proxy for the form application
