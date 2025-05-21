@@ -13,15 +13,35 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-// Twilio configuration
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = process.env.TWILIO_AUTH_TOKEN;
-const verifySid = process.env.TWILIO_VERIFY_SID;
-const client = twilio(accountSid, authToken);
+// Twilio configuration - made optional
+let client = null;
+let verifySid = null;
+
+try {
+    if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_ACCOUNT_SID.startsWith('AC')) {
+        const accountSid = process.env.TWILIO_ACCOUNT_SID;
+        const authToken = process.env.TWILIO_AUTH_TOKEN;
+        verifySid = process.env.TWILIO_VERIFY_SID;
+        client = twilio(accountSid, authToken);
+        console.log('Twilio client initialized successfully');
+    } else {
+        console.log('Twilio credentials not properly configured or missing. Twilio features will be disabled.');
+    }
+} catch (error) {
+    console.error('Error initializing Twilio client:', error);
+    console.log('Twilio features will be disabled.');
+}
 
 // Send verification code
 app.post('/api/send-verification', async (req, res) => {
     try {
+        if (!client) {
+            return res.status(503).json({ 
+                success: false, 
+                message: 'Twilio service not configured' 
+            });
+        }
+        
         const { phone } = req.body;
         
         const verification = await client.verify.v2
@@ -41,6 +61,13 @@ app.post('/api/send-verification', async (req, res) => {
 // Verify code
 app.post('/api/verify-code', async (req, res) => {
     try {
+        if (!client) {
+            return res.status(503).json({ 
+                success: false, 
+                message: 'Twilio service not configured' 
+            });
+        }
+        
         const { phone, code } = req.body;
         
         const verificationCheck = await client.verify.v2
@@ -80,7 +107,8 @@ app.get('/', (req, res) => {
         }
         
         // Replace the API key placeholder with the actual key from environment variables
-        const html = data.replace('YOUR_API_KEY', process.env.GOOGLE_MAPS_API_KEY);
+        const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY || 'YOUR_API_KEY';
+        const html = data.replace('YOUR_API_KEY', googleMapsApiKey);
         
         res.send(html);
     });

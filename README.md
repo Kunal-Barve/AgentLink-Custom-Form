@@ -9,8 +9,47 @@ This repository contains a custom form application built with Alpine.js and Expr
 - SSH access to your Hetzner Cloud VPS
 - Docker and Docker Compose installed on your VPS
 - A domain or subdomain pointing to your VPS (optional)
+- OpenSSH client installed on your local machine
 
-### Deployment Steps
+### Deployment Methods
+
+#### Option 1: Using the Deployment Script (Recommended)
+
+##### For Windows Users (PowerShell)
+
+1. Edit the `deploy.ps1` script to set your server details:
+   - `$SERVER_USER` (default: root)
+   - `$SERVER_IP` (your Hetzner VPS IP)
+   - `$SERVER_PATH` (where to deploy on the server)
+
+2. Run the PowerShell script:
+   ```powershell
+   .\deploy.ps1
+   ```
+
+##### For Linux/Mac Users (Bash)
+
+1. Rename `deploy.sh.example` to `deploy.sh`:
+   ```bash
+   mv deploy.sh.example deploy.sh
+   ```
+
+2. Make the script executable:
+   ```bash
+   chmod +x deploy.sh
+   ```
+
+3. Edit the script to set your server details:
+   - `SERVER_USER` (default: root)
+   - `SERVER_IP` (your Hetzner VPS IP)
+   - `SERVER_PATH` (where to deploy on the server)
+
+4. Run the bash script:
+   ```bash
+   ./deploy.sh
+   ```
+
+#### Option 2: Manual Deployment
 
 1. **Clone the repository to your local machine**
 
